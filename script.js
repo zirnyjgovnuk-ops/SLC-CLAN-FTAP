@@ -1,9 +1,10 @@
 // ============================================
-//  TELEGRAM BOT CONFIG — ВСЁ НАСТРОЕНО
+//  TELEGRAM BOT CONFIG
 // ============================================
 const BOT_TOKEN = '8908023869:AAEd6pxPy5VCqjA5TXCsUDD-wfotAclqiu4';
 const ADMIN_CHAT_ID = '6047984459';
 const API_URL = 'https://api.telegram.org';
+const VERCEL_URL = 'https://slc-clan-ftap.vercel.app';
 
 // ============================================
 //  SCROLL PROGRESS
@@ -133,7 +134,7 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ============================================
-//  TELEGRAM BOT API
+//  TELEGRAM BOT API (для заявок)
 // ============================================
 async function sendToTelegramBot(message) {
     const url = `${API_URL}/bot${BOT_TOKEN}/sendMessage`;
@@ -275,11 +276,23 @@ if (moderatorForm) {
 }
 
 // ============================================
-//  CHAT (обновлён — без фейковых ответов)
+//  CHAT — двусторонний через Vercel
 // ============================================
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const chatMessages = document.getElementById('chatMessages');
+
+// Уникальный ID пользователя в этом браузере
+function getUserId() {
+    let id = localStorage.getItem('slc_user_id');
+    if (!id) {
+        id = 'user_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+        localStorage.setItem('slc_user_id', id);
+    }
+    return id;
+}
+
+const USER_ID = getUserId();
 
 function addMessage(text, type) {
     if (!chatMessages) return;
@@ -300,33 +313,54 @@ if (chatForm) {
         const message = chatInput.value.trim();
         if (!message) return;
 
-        // Показать сообщение пользователя в чате
         addMessage(message, 'user');
         chatInput.value = '';
 
-        // Отправить в Telegram админам
-        const chatMessage =
-            `💬 <b>СООБЩЕНИЕ ИЗ ЧАТА ПОДДЕРЖКИ SLC</b>\n\n` +
-            `👤 <b>От пользователя:</b> ${message}\n` +
-            `🕐 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}`;
+        try {
+            const response = await fetch(`${VERCEL_URL}/api/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    userId: USER_ID
+                })
+            });
 
-        const ok = await sendToTelegramBot(chatMessage);
+            const data = await response.json();
 
-        // Показать пользователю системное уведомление
-        setTimeout(() => {
-            if (ok) {
+            if (data.ok) {
                 addMessage(
-                    '✅ Ваше сообщение отправлено администрации. Ожидайте ответа — с вами свяжутся в Telegram или напишут прямо здесь.',
+                    '✅ Сообщение доставлено администрации. Ответ появится здесь, как только вам ответят.',
                     'system'
                 );
             } else {
-                addMessage(
-                    '⚠️ Не удалось отправить сообщение. Попробуйте позже или напишите нам в Telegram напрямую.',
-                    'system'
-                );
+                addMessage('⚠️ Не удалось отправить сообщение. Попробуйте позже.', 'system');
             }
-        }, 400);
+        } catch (error) {
+            console.error('Chat send error:', error);
+            addMessage('⚠️ Ошибка соединения. Проверьте интернет и попробуйте снова.', 'system');
+        }
     });
+}
+
+// Каждые 3 секунды проверяем новые ответы от админа
+async function checkForReplies() {
+    try {
+        const response = await fetch(`${VERCEL_URL}/api/webhook?userId=${USER_ID}`);
+        const data = await response.json();
+
+        if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(msg => {
+                addMessage(msg.text, 'admin');
+            });
+        }
+    } catch (error) {
+        // Тихо игнорируем ошибки
+    }
+}
+
+if (chatForm) {
+    setInterval(checkForReplies, 3000);
 }
 
 // ============================================
@@ -367,4 +401,5 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ SLC Clan Website Loaded');
     console.log('🤖 Bot: @slcsite_bot');
     console.log('📬 Admin chat_id: 6047984459');
+    console.log('🌐 Vercel API:', VERCEL_URL);
 });
