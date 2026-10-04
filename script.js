@@ -134,7 +134,7 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ============================================
-//  TELEGRAM BOT API (для заявок)
+//  TELEGRAM BOT API (заявки)
 // ============================================
 async function sendToTelegramBot(message) {
     const url = `${API_URL}/bot${BOT_TOKEN}/sendMessage`;
@@ -276,13 +276,13 @@ if (moderatorForm) {
 }
 
 // ============================================
-//  CHAT — двусторонний через Vercel
+//  CHAT — двусторонний через Vercel + Redis
 // ============================================
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const chatMessages = document.getElementById('chatMessages');
 
-// Уникальный ID пользователя в этом браузере
+// Уникальный ID пользователя (хранится в браузере)
 function getUserId() {
     let id = localStorage.getItem('slc_user_id');
     if (!id) {
@@ -293,6 +293,9 @@ function getUserId() {
 }
 
 const USER_ID = getUserId();
+
+// Время последнего полученного сообщения — чтобы не дублировать
+let lastSeen = 0;
 
 function addMessage(text, type) {
     if (!chatMessages) return;
@@ -330,32 +333,36 @@ if (chatForm) {
 
             if (data.ok) {
                 addMessage(
-                    '✅ Сообщение доставлено администрации. Ответ появится здесь, как только вам ответят.',
+                    '✅ Сообщение отправлено администрации. Ответ появится здесь автоматически.',
                     'system'
                 );
             } else {
-                addMessage('⚠️ Не удалось отправить сообщение. Попробуйте позже.', 'system');
+                addMessage('⚠️ Не удалось отправить. Попробуйте позже.', 'system');
             }
         } catch (error) {
             console.error('Chat send error:', error);
-            addMessage('⚠️ Ошибка соединения. Проверьте интернет и попробуйте снова.', 'system');
+            addMessage('⚠️ Ошибка соединения. Проверьте интернет.', 'system');
         }
     });
 }
 
-// Каждые 3 секунды проверяем новые ответы от админа
 async function checkForReplies() {
     try {
-        const response = await fetch(`${VERCEL_URL}/api/webhook?userId=${USER_ID}`);
+        const response = await fetch(
+            `${VERCEL_URL}/api/webhook?userId=${USER_ID}&lastSeen=${lastSeen}`
+        );
         const data = await response.json();
 
         if (data.messages && data.messages.length > 0) {
             data.messages.forEach(msg => {
-                addMessage(msg.text, 'admin');
+                if (msg.from === 'admin') {
+                    addMessage(msg.text, 'admin');
+                    lastSeen = Math.max(lastSeen, msg.time);
+                }
             });
         }
     } catch (error) {
-        // Тихо игнорируем ошибки
+        // Тихо игнорируем
     }
 }
 
@@ -400,6 +407,5 @@ document.querySelectorAll('input, select, textarea').forEach(input => {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ SLC Clan Website Loaded');
     console.log('🤖 Bot: @slcsite_bot');
-    console.log('📬 Admin chat_id: 6047984459');
-    console.log('🌐 Vercel API:', VERCEL_URL);
+    console.log('🌐 Vercel:', VERCEL_URL);
 });
