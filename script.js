@@ -275,25 +275,17 @@ if (moderatorForm) {
 }
 
 // ============================================
-//  CHAT
+//  CHAT (обновлён — без фейковых ответов)
 // ============================================
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const chatMessages = document.getElementById('chatMessages');
 
-const adminResponses = [
-    "Здравствуйте! Чем можем помочь?",
-    "Понял вашу ситуацию. Давайте разберёмся.",
-    "Спасибо за обращение. Мы рассмотрим ваш вопрос.",
-    "Хороший вопрос! Сейчас всё объясню.",
-    "Обратитесь к GrandLeader или ClanMaster для решения этого вопроса."
-];
-
 function addMessage(text, type) {
     if (!chatMessages) return;
     const message = document.createElement('div');
     message.className = `message ${type}`;
-    const sender = type === 'user' ? 'Вы' : (type === 'admin' ? 'Администратор' : '');
+    const sender = type === 'user' ? 'Вы' : (type === 'admin' ? 'Администрация' : '');
     message.innerHTML = `
         ${sender ? `<div class="message-sender">${sender}</div>` : ''}
         <div class="message-text">${text}</div>
@@ -308,20 +300,32 @@ if (chatForm) {
         const message = chatInput.value.trim();
         if (!message) return;
 
+        // Показать сообщение пользователя в чате
         addMessage(message, 'user');
         chatInput.value = '';
 
+        // Отправить в Telegram админам
         const chatMessage =
             `💬 <b>СООБЩЕНИЕ ИЗ ЧАТА ПОДДЕРЖКИ SLC</b>\n\n` +
             `👤 <b>От пользователя:</b> ${message}\n` +
             `🕐 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}`;
 
-        await sendToTelegramBot(chatMessage);
+        const ok = await sendToTelegramBot(chatMessage);
 
+        // Показать пользователю системное уведомление
         setTimeout(() => {
-            const randomResponse = adminResponses[Math.floor(Math.random() * adminResponses.length)];
-            addMessage(randomResponse, 'admin');
-        }, 1500 + Math.random() * 1000);
+            if (ok) {
+                addMessage(
+                    '✅ Ваше сообщение отправлено администрации. Ожидайте ответа — с вами свяжутся в Telegram или напишут прямо здесь.',
+                    'system'
+                );
+            } else {
+                addMessage(
+                    '⚠️ Не удалось отправить сообщение. Попробуйте позже или напишите нам в Telegram напрямую.',
+                    'system'
+                );
+            }
+        }, 400);
     });
 }
 
