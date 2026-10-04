@@ -17,26 +17,28 @@ export default async function handler(req, res) {
         try {
             const update = req.body;
 
-            // Проверяем: это reply на сообщение бота?
             if (update.message && update.message.reply_to_message) {
                 const replyText = update.message.text;
                 const originalText = update.message.reply_to_message.text || '';
 
-                // Достаём msgId из оригинального сообщения
-                const match = originalText.match(/<b>msgId:<\/b>\s*<code>([^<]+)<\/code>/);
+                // Ищем msgId в plain text (без HTML тегов)
+                // В plain text это выглядит как: "msgId: 1791157647467_8op66h"
+                const match = originalText.match(/msgId:\s*([a-zA-Z0-9_]+)/);
 
                 if (match && match[1]) {
                     const msgId = match[1];
+                    console.log('Found msgId:', msgId);
 
-                    // Узнаём, какому userId принадлежит это сообщение
+                    // Узнаём userId по msgId
                     const userIdResponse = await fetch(`${KV_URL}/get/msg:${msgId}`, {
                         headers: { Authorization: `Bearer ${KV_TOKEN}` }
                     });
                     const userIdData = await userIdResponse.json();
                     const userId = userIdData.result;
 
+                    console.log('Found userId:', userId);
+
                     if (userId) {
-                        // Сохраняем ответ админа в список сообщений пользователя
                         const adminMessage = JSON.stringify({
                             from: 'admin',
                             text: replyText,
@@ -47,7 +49,13 @@ export default async function handler(req, res) {
                             `${KV_URL}/lpush/chat:user:${userId}/${encodeURIComponent(adminMessage)}`,
                             { headers: { Authorization: `Bearer ${KV_TOKEN}` } }
                         );
+
+                        console.log('Saved admin reply for', userId);
+                    } else {
+                        console.log('User not found for msgId:', msgId);
                     }
+                } else {
+                    console.log('msgId not found in reply_to_message:', originalText);
                 }
             }
 
@@ -59,7 +67,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================
-    //  GET — сайт спрашивает новые сообщения для пользователя
+    //  GET — сайт спрашивает новые сообщения
     // ============================================
     if (req.method === 'GET') {
         const userId = req.query.userId;
@@ -68,7 +76,6 @@ export default async function handler(req, res) {
         const lastSeen = parseInt(req.query.lastSeen) || 0;
 
         try {
-            // Получаем все сообщения пользователя из Redis
             const response = await fetch(`${KV_URL}/lrange/chat:user:${userId}/0/-1`, {
                 headers: { Authorization: `Bearer ${KV_TOKEN}` }
             });
