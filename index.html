@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLC — Клан FTAP Roblox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="scroll-progress"></div>
+    
+    <header class="header">
+        <div class="container header-content">
+            <a href="#" class="logo">
+                <span class="logo-icon">⚔️</span>
+                <span class="logo-text">SLC</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="#about">О клане</a>
+                <a href="#join">Вступить</a>
+                <a href="#complaint">Жалоба</a>
+                <a href="#moderator">Модератор</a>
+                <a href="#chat">Чат</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="container hero-content">
+                <h1 class="hero-title">Клан SLC</h1>
+                <p class="hero-sub">Развиваемся в FTAP на Roblox с 2023 года</p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="32" data-suffix="+">0+</span>
+                        <span class="stat-label">Участников</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="12" data-suffix="мес">0</span>
+                        <span class="stat-label">Опыт</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="100" data-suffix="+">0+</span>
+                        <span class="stat-label">Игр проведено</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-target="24" data-suffix="/7">0</span>
+                        <span class="stat-label">Активность</span>
+                    </div>
+                </div>
+                <a href="#join" class="cta-button">Вступить в клан</a>
+            </div>
+        </section>
+
+        <section class="about" id="about">
+            <div class="container">
+                <h2 class="section-title">О нашем клане</h2>
+                <div class="about-grid">
+                    <div class="about-card reveal">
+                        <div class="about-card-icon">🎯</div>
+                        <h3>Наша миссия</h3>
+                        <p>Создать сильное сообщество игроков FTAP, где каждый может развиваться, побеждать и находить друзей.</p>
+                    </div>
+                    <div class="about-card reveal">
+                        <div class="about-card-icon">🏆</div>
+                        <h3>Наши достижения</h3>
+                        <p>Активно растущее сообщество, проводим регулярные тренировки и внутренние турниры.</p>
+                    </div>
+                    <div class="about-card reveal">
+                        <div class="about-card-icon">🤝</div>
+                        <h3>Наши ценности</h3>
+                        <p>Взаимопомощь, уважение, честная игра и постоянный рост навыков.</p>
+                    </div>
+                    <div class="about-card reveal">
+                        <div class="about-card-icon">⚡</div>
+                        <h3>Преимущества</h3>
+                        <p>Ежедневные тренировки, доступ к секретным тактикам, поддержка опытных игроков.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="join" id="join">
+            <div class="container">
+                <h2 class="section-title">Анкета на вступление</h2>
+                <p class="section-subtitle">Заполните форму и станьте частью SLC</p>
+                <form class="form-card reveal" id="joinForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="joinNickname">Никнейм в Roblox</label>
+                            <input type="text" id="joinNickname" name="nickname" required placeholder="Ваш ник">
+                        </div>
+                        <div class="form-group">
+                            <label for="joinAge">Возраст</label>
+                            <input type="number" id="joinAge" name="age" required min="10" max="99" placeholder="14">
+                        </div>
+                        <div class="form-group">
+                            <label for="joinExperience">Опыт в FTAP (месяцев)</label>
+                            <input type="number" id="joinExperience" name="experience" required min="0" placeholder="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="joinRank">Текущий ранг (1-10)</label>
+                            <select id="joinRank" name="rank" required>
+                                <option value="">Выберите ранг</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="joinWhy">Почему хотите в SLC?</label>
+                            <textarea id="joinWhy" name="why" required rows="4" placeholder="Расскажите о себе и своих целях..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="joinContact">Telegram для связи</label>
+                            <input type="text" id="joinContact" name="contact" required placeholder="@username">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-button">Отправить заявку</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="complaint" id="complaint">
+            <div class="container">
+                <h2 class="section-title">Подать жалобу</h2>
+                <p class="section-subtitle">Сообщите о нарушении правил клана</p>
+                <form class="form-card reveal" id="complaintForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="complaintYourNick">Ваш никнейм</label>
+                            <input type="text" id="complaintYourNick" name="yourNick" required placeholder="Ваш ник">
+                        </div>
+                        <div class="form-group">
+                            <label for="complaintTargetNick">Никнейм нарушителя</label>
+                            <input type="text" id="complaintTargetNick" name="targetNick" required placeholder="Ник нарушителя">
+                        </div>
+                        <div class="form-group">
+                            <label for="complaintType">Тип нарушения</label>
+                            <select id="complaintType" name="type" required>
+                                <option value="">Выберите тип</option>
+                                <option value="toxicity">Токсичность / Оскорбления</option>
+                                <option value="cheating">Читы / Нечестная игра</option>
+                                <option value="afk">AFK во время клановых войн</option>
+                                <option value="betrayal">Предательство клана</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="complaintDate">Дата инцидента</label>
+                            <input type="date" id="complaintDate" name="date" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="complaintDescription">Описание ситуации</label>
+                            <textarea id="complaintDescription" name="description" required rows="5" placeholder="Подробно опишите что произошло..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="complaintEvidence">Доказательства (ссылки)</label>
+                            <input type="text" id="complaintEvidence" name="evidence" placeholder="Ссылки на скриншоты, видео...">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-button">Отправить жалобу</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="moderator" id="moderator">
+            <div class="container">
+                <h2 class="section-title">Анкета на модератора</h2>
+                <p class="section-subtitle">Станьте частью администрации SLC</p>
+                <form class="form-card reveal" id="moderatorForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modNickname">Никнейм в Roblox</label>
+                            <input type="text" id="modNickname" name="nickname" required placeholder="Ваш ник">
+                        </div>
+                        <div class="form-group">
+                            <label for="modAge">Возраст</label>
+                            <input type="number" id="modAge" name="age" required min="16" max="99" placeholder="18">
+                        </div>
+                        <div class="form-group">
+                            <label for="modTimeInClan">Время в клане (месяцев)</label>
+                            <input type="number" id="modTimeInClan" name="timeInClan" required min="3" placeholder="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="modCurrentRank">Текущая позиция</label>
+                            <select id="modCurrentRank" name="currentRank" required>
+                                <option value="">Выберите позицию</option>
+                                <option value="ml_admin">мл.админ</option>
+                                <option value="admin">админ</option>
+                                <option value="moderator">модератор</option>
+                                <option value="st_moderator">ст. Модератор</option>
+                                <option value="coowner">соовнер</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="modWhy">Почему вы хотите стать модератором?</label>
+                            <textarea id="modWhy" name="why" required rows="4" placeholder="Расскажите о вашей мотивации..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="modExperience">Опыт модерации</label>
+                            <textarea id="modExperience" name="experience" rows="4" placeholder="Были ли вы модератором раньше? Где?"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="modAvailability">График доступности</label>
+                            <input type="text" id="modAvailability" name="availability" required placeholder="Пн-Пт 18:00-23:00 МСК">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="modDiscord">Telegram для связи</label>
+                            <input type="text" id="modDiscord" name="discord" required placeholder="@username">
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-button">Отправить заявку</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="chat" id="chat">
+            <div class="container">
+                <h2 class="section-title">Чат с администрацией</h2>
+                <p class="section-subtitle">Свяжитесь с админами клана напрямую</p>
+                <div class="chat-container reveal">
+                    <div class="chat-sidebar">
+                        <div class="chat-admins">
+                            <h3>Администраторы онлайн</h3>
+                            <div class="admin-item online">
+                                <div class="admin-avatar" style="background: linear-gradient(135deg, #ff6b35, #f7931e);">GL</div>
+                                <div class="admin-info">
+                                    <span class="admin-name">GrandLeader</span>
+                                    <span class="admin-status">Онлайн</span>
+                                </div>
+                            </div>
+                            <div class="admin-item online">
+                                <div class="admin-avatar" style="background: linear-gradient(135deg, #e94560, #c73e54);">CM</div>
+                                <div class="admin-info">
+                                    <span class="admin-name">ClanMaster</span>
+                                    <span class="admin-status">Онлайн</span>
+                                </div>
+                            </div>
+                            <div class="admin-item offline">
+                                <div class="admin-avatar" style="background: linear-gradient(135deg, #53354a, #3a2535);">MOD</div>
+                                <div class="admin-info">
+                                    <span class="admin-name">HeadModer</span>
+                                    <span class="admin-status">Офлайн</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-main">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message system">
+                                <p>Добро пожаловать в чат поддержки SLC! Опишите вашу проблему, и администратор ответит вам.</p>
+                            </div>
+                        </div>
+                        <form class="chat-input-form" id="chatForm">
+                            <input type="text" id="chatInput" placeholder="Напишите сообщение..." required>
+                            <button type="submit" class="chat-send-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="rules" id="rules">
+            <div class="container">
+                <h2 class="section-title">Правила клана</h2>
+                <div class="rules-grid">
+                    <div class="rule-card reveal">
+                        <span class="rule-number">01</span>
+                        <h3>Уважение</h3>
+                        <p>Уважайте всех участников клана. Оскорбления и токсичность запрещены.</p>
+                    </div>
+                    <div class="rule-card reveal">
+                        <span class="rule-number">02</span>
+                        <h3>Активность</h3>
+                        <p>Минимум 3 клановые войны в неделю. Неактивность более 2 недель — кик.</p>
+                    </div>
+                    <div class="rule-card reveal">
+                        <span class="rule-number">03</span>
+                        <h3>Честная игра</h3>
+                        <p>Использование читов, эксплойтов запрещено. Только честная игра.</p>
+                    </div>
+                    <div class="rule-card reveal">
+                        <span class="rule-number">04</span>
+                        <h3>Лояльность</h3>
+                        <p>Запрещено предавать клан, сотрудничать с вражескими кланами.</p>
+                    </div>
+                    <div class="rule-card reveal">
+                        <span class="rule-number">05</span>
+                        <h3>Discord</h3>
+                        <p>Обязательное наличие Discord и участие в голосовых каналах.</p>
+                    </div>
+                    <div class="rule-card reveal">
+                        <span class="rule-number">06</span>
+                        <h3>Иерархия</h3>
+                        <p>Слушайтесь старших по званию. Решения администрации окончательны.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <span class="logo-icon">⚔️</span>
+                        <span class="logo-text">SLC</span>
+                    </a>
+                    <p>Сильнейший клан FTAP на Roblox</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Навигация</h4>
+                    <a href="#about">О клане</a>
+                    <a href="#join">Вступить</a>
+                    <a href="#complaint">Жалоба</a>
+                    <a href="#moderator">Модератор</a>
+                </div>
+                <div class="footer-social">
+                    <h4>Мы в соцсетях</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link vk">ВКонтакте</a>
+                        <a href="#" class="social-link telegram">Telegram</a>
+                        <a href="#" class="social-link discord">Discord</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Клан SLC. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <span class="notification-icon">✓</span>
+            <span class="notification-text">Заявка успешно отправлена!</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
