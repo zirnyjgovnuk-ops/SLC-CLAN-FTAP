@@ -2,7 +2,7 @@
 //  TELEGRAM BOT CONFIG
 // ============================================
 const BOT_TOKEN = '8908023869:AAEd6pxPy5VCqjA5TXCsUDD-wfotAclqiu4';
-const ADMIN_CHAT_ID = '6047984459';
+const ADMIN_CHAT_ID = '-1004399249500';
 const API_URL = 'https://api.telegram.org';
 const VERCEL_URL = 'https://slc-clan-ftap.vercel.app';
 
