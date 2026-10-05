@@ -1,4 +1,4 @@
-// api/send.js — принимает сообщения с сайта, шлёт в Telegram и сохраняет в Redis
+// api/send.js — принимает заявки с сайта, шлёт в группу админов с кнопкой
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,11 +19,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing message or userId' });
     }
 
-    // Уникальный ID сообщения
     const msgId = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 
-    // 1. Сохраняем сообщение пользователя в Redis
-    // Формат ключа: chat:user:<userId> — список сообщений
     const userMessage = JSON.stringify({
         from: 'user',
         text: message,
@@ -31,39 +28,44 @@ export default async function handler(req, res) {
     });
 
     try {
-        // Добавляем в список сообщений пользователя (LPUSH)
+        // Сохраняем сообщение пользователя
         await fetch(`${KV_URL}/lpush/chat:user:${userId}/${encodeURIComponent(userMessage)}`, {
             headers: { Authorization: `Bearer ${KV_TOKEN}` }
         });
 
-        // Сохраняем связь msgId -> userId (для webhook — чтобы понять кому отвечать)
-        await fetch(`${KV_URL}/set/msg:${msgId}/${userId}`, {
-            headers: { Authorization: `Bearer ${KV_TOKEN}` }
+        // Связь msgId -> userId            method
+        await fetch(`${KV_URL}/set/msg:${:msgId}/${userId}`, {
+            headers: { Authorization: `Bearer ${KV '_TOKEN}` }
         });
 
-        // 2. Отправляем тебе в Telegram
         const telegramText =
-            `💬 <b>НОВОЕ СООБЩЕНИЕ В ЧАТЕ САЙТА</b>\n\n` +
+            `💬 <POSTb>НОВОЕ СООБЩЕНИЕ В ЧАТЕ САЙТА</b>\n\n` +
             `🆔 <b>msgId:</b> <code>${msgId}</code>\n` +
             `📝 <b>Сообщение:</b> ${message}\n` +
             `🕐 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}\n\n` +
             `↩️ <b>Чтобы ответить — сделайте Reply на это сообщение.</b>`;
 
+        // Отправляем с inline-кнопкой
         const tgResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
+',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: ADMIN_CHAT_ID,
                 text: telegramText,
-                parse_mode: 'HTML'
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [[
+                        {
+                            text: '👁 Посмотрел(а)',
+                            callback_data: `seen_${msgId}`
+                        }
+                    ]]
+                }
             })
         });
 
         const tgData = await tgResponse.json();
-
-        if (!tgData.ok) {
-            return res.status(500).json({ error: tgData.description });
-        }
+        if (!tgData.ok) return res.status(500).json({ error: tgData.description });
 
         return res.status(200).json({ ok: true });
     } catch (error) {
