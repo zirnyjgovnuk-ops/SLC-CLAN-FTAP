@@ -1,4 +1,4 @@
-// api/webhook.js — принимает ответы из Telegram, сохраняет в Redis, отдаёт сайту
+// api/webhook.js — обрабатывает ответы и нажатия кнопок из Telegram
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,36 +7,75 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
+    const BOT_TOKEN = process.env.BOT_TOKEN;
     const KV_URL = process.env.KV_REST_API_URL;
     const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
     // ============================================
-    //  POST — Telegram присылает ответ админа
+    //  POST — Telegram присылает обновления
     // ============================================
     if (req.method === 'POST') {
         try {
             const update = req.body;
 
+            // -------------------------------------------------
+            //  1. НАЖАТИЕ КНОПКИ «ПОСМОТРЕЛ(А)»
+            // -------------------------------------------------
+            if (update.callback_query) {
+                const cb = update.callback_query;
+                const data = cb.data || '';
+                const adminName = cb.from.username
+                    ? '@' + cb.from.username
+                    : (cb.from.first_name || 'Админ');
+
+                if (data.startsWith('seen_')) {
+                    const originalText = cb.message.text || '';
+                    const newText = originalText + `\n\n✅ <b>Просмотрено — ${adminName}</b>`;
+
+                    // Меняем сообщение: убираем кнопку, добавляем «Просмотрено»
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: cb.message.chat.id,
+                            message_id: cb.message.message_id,
+                            text: newText,
+                            parse_mode: 'HTML',
+                            reply_markup: { inline_keyboard: [] }
+                        })
+                    });
+
+                    // Отвечаем Telegram — убираем «часики» с кнопки
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            callback_query_id: cb.id,
+                            text: '✅ Отмечено как просмотренное'
+                        })
+                    });
+                }
+
+                return res.status(200).json({ ok: true });
+            }
+
+            // -------------------------------------------------
+            //  2. REPLY НА СООБЩЕНИЕ (для двустороннего чата)
+            // -------------------------------------------------
             if (update.message && update.message.reply_to_message) {
                 const replyText = update.message.text;
                 const originalText = update.message.reply_to_message.text || '';
 
-                // Ищем msgId в plain text (без HTML тегов)
-                // В plain text это выглядит как: "msgId: 1791157647467_8op66h"
                 const match = originalText.match(/msgId:\s*([a-zA-Z0-9_]+)/);
 
                 if (match && match[1]) {
                     const msgId = match[1];
-                    console.log('Found msgId:', msgId);
 
-                    // Узнаём userId по msgId
                     const userIdResponse = await fetch(`${KV_URL}/get/msg:${msgId}`, {
                         headers: { Authorization: `Bearer ${KV_TOKEN}` }
                     });
                     const userIdData = await userIdResponse.json();
                     const userId = userIdData.result;
-
-                    console.log('Found userId:', userId);
 
                     if (userId) {
                         const adminMessage = JSON.stringify({
@@ -49,13 +88,7 @@ export default async function handler(req, res) {
                             `${KV_URL}/lpush/chat:user:${userId}/${encodeURIComponent(adminMessage)}`,
                             { headers: { Authorization: `Bearer ${KV_TOKEN}` } }
                         );
-
-                        console.log('Saved admin reply for', userId);
-                    } else {
-                        console.log('User not found for msgId:', msgId);
                     }
-                } else {
-                    console.log('msgId not found in reply_to_message:', originalText);
                 }
             }
 
@@ -86,11 +119,7 @@ export default async function handler(req, res) {
                     try { return JSON.parse(str); } catch { return null; }
                 })
                 .filter(m => m && m.time > lastSeen)
-                .map(m => ({
-                    from: m.from,
-                    text: m.text,
-                    time: m.time
-                }));
+                .map(m => ({ from: m.from, text: m.text, time: m.time }));
 
             return res.status(200).json({ messages });
         } catch (error) {
