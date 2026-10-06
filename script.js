@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (galleryGrid) {
         loadGallery();
-        if (adminPassword === 'SLC2026') {
+        if (adminPassword === 'Kit1k') {
             setAdminMode(true);
         }
     }
