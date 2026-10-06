@@ -13,7 +13,7 @@ window.addEventListener('scroll', () => {
     bar.style.width = percent + '%';
 });
 
-// ============================================
+// ================================= Inters===========
 //  HEADER SCROLL EFFECT
 // ============================================
 const header = document.querySelector('.header');
@@ -99,7 +99,7 @@ function animateCounter(el) {
 
 const counterEls = document.querySelectorAll('[data-target]');
 if (counterEls.length) {
-    const counterObserver = new IntersectionObserver((entries) => {
+    const counterObserver = newectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 animateCounter(entry.target);
@@ -131,7 +131,7 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ============================================
-//  ОТПРАВКА ЗАЯВОК ЧЕРЕЗ VERCEL (с кнопкой)
+//  ОТПРАВКА ЗАЯВОК ЧЕРЕЗ VERCEL
 // ============================================
 async function sendFormToVercel(type, data) {
     try {
@@ -219,7 +219,151 @@ if (moderatorForm) {
 }
 
 // ============================================
-//  CHAT — двусторонний через Vercel + Redis
+//  GALLERY
+// ============================================
+const galleryGrid = document.getElementById('galleryGrid');
+const galleryFileInput = document.getElementById('galleryFileInput');
+const galleryCaption = document.getElementById('galleryCaption');
+const galleryUploadBtn = document.getElementById('galleryUploadBtn');
+const galleryLoginBtn = document.getElementById('galleryLoginBtn');
+const galleryLogoutBtn = document.getElementById('galleryLogoutBtn');
+const galleryAdminPanel = document.getElementById('galleryAdminPanel');
+const galleryAdminLogin = document.getElementById('galleryAdminLogin');
+
+let adminPassword = sessionStorage.getItem('slc_admin_pass') || null;
+
+function setAdminMode(on) {
+    if (on) {
+        document.body.classList.add('admin-mode');
+        galleryAdminPanel.style.display = 'block';
+        galleryAdminLogin.style.display = 'none';
+    } else {
+        document.body.classList.remove('admin-mode');
+        galleryAdminPanel.style.display = 'none';
+        galleryAdminLogin.style.display = 'block';
+    }
+}
+
+async function loadGallery() {
+    if (!galleryGrid) return;
+    try {
+        const response = await fetch(`${VERCEL_URL}/api/photos`);
+        const data = await response.json();
+
+        if (!data.photos || data.photos.length === 0) {
+            galleryGrid.innerHTML = '<p style="text-align:center; color: var(--text-muted); grid-column: 1 / -1;">Пока нет фотографий. Админы могут загрузить их сюда.</p>';
+            return;
+        }
+
+        galleryGrid.innerHTML = data.photos.map(photo => `
+            <div class="gallery-item">
+                <img src="${photo.url}" alt="${photo.caption || 'SLC'}" loading="lazy">
+                ${photo.caption ? `<div class="gallery-caption">${photo.caption}</div>` : ''}
+                <button class="gallery-delete-btn" data-url="${photo.url}" title="Удалить">✕</button>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.gallery-delete-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!adminPassword) return;
+                if (!confirm('Удалить это фото?')) return;
+
+                try {
+                    await fetch(`${VERCEL_URL}/api/photos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: adminPassword, url: btn.dataset.url })
+                    });
+                    loadGallery();
+                } catch (e) {
+                    alert('Ошибка удаления');
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Gallery load error:', error);
+        galleryGrid.innerHTML = '<p style="text-align:center; color: var(--text-muted); grid-column: 1 / -1;">Ошибка загрузки галереи</p>';
+    }
+}
+
+if (galleryLoginBtn) {
+    galleryLoginBtn.addEventListener('click', () => {
+        const pass = prompt('Введите пароль админа:');
+        if (pass === 'SLC2026') {
+            adminPassword = pass;
+            sessionStorage.setItem('slc_admin_pass', pass);
+            setAdminMode(true);
+            loadGallery();
+        } else if (pass !== null) {
+            alert('Неверный пароль');
+        }
+    });
+}
+
+if (galleryLogoutBtn) {
+    galleryLogoutBtn.addEventListener('click', () => {
+        adminPassword = null;
+        sessionStorage.removeItem('slc_admin_pass');
+        setAdminMode(false);
+        loadGallery();
+    });
+}
+
+if (galleryUploadBtn) {
+    galleryUploadBtn.addEventListener('click', async () => {
+        if (!galleryFileInput.files[0]) {
+            alert('Выберите фото');
+            return;
+        }
+
+        galleryUploadBtn.disabled = true;
+        galleryUploadBtn.textContent = 'Загрузка...';
+
+        const file = galleryFileInput.files[0];
+
+        if (file.size > 3 * 1024 * 1024) {
+            alert('Файл слишком большой (максимум 3 МБ)');
+            galleryUploadBtn.disabled = false;
+            galleryUploadBtn.textContent = 'Загрузить';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const response = await fetch(`${VERCEL_URL}/api/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: adminPassword,
+                        image: e.target.result,
+                        caption: galleryCaption.value.trim()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    galleryFileInput.value = '';
+                    galleryCaption.value = '';
+                    loadGallery();
+                    showNotification('Фото загружено!');
+                } else {
+                    alert('Ошибка: ' + (data.error || 'неизвестная'));
+                }
+            } catch (err) {
+                alert('Ошибка соединения');
+            }
+
+            galleryUploadBtn.disabled = false;
+            galleryUploadBtn.textContent = 'Загрузить';
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ============================================
+//  CHAT
 // ============================================
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
@@ -339,4 +483,11 @@ document.querySelectorAll('input, select, textarea').forEach(input => {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ SLC Clan Website Loaded');
     console.log('🌐 Vercel:', VERCEL_URL);
+
+    if (galleryGrid) {
+        loadGallery();
+        if (adminPassword === 'SLC2026') {
+            setAdminMode(true);
+        }
+    }
 });
