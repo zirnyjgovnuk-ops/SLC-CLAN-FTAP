@@ -7,20 +7,14 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    const BOT_TOKEN = process.env.BOT_TOKEN;
+    const BOT_TOKEN = '8908023869:AAEd6pxPy5VCqjA5TXCsUDD-wfotAclqiu4';
     const KV_URL = process.env.KV_REST_API_URL;
     const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
-    // ============================================
-    //  POST — Telegram присылает обновления
-    // ============================================
     if (req.method === 'POST') {
         try {
             const update = req.body;
 
-            // -------------------------------------------------
-            //  1. НАЖАТИЕ КНОПКИ «ПОСМОТРЕЛ(А)»
-            // -------------------------------------------------
             if (update.callback_query) {
                 const cb = update.callback_query;
                 const data = cb.data || '';
@@ -32,7 +26,6 @@ export default async function handler(req, res) {
                     const originalText = cb.message.text || '';
                     const newText = originalText + `\n\n✅ <b>Просмотрено — ${adminName}</b>`;
 
-                    // Меняем сообщение: убираем кнопку, добавляем «Просмотрено»
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -45,7 +38,6 @@ export default async function handler(req, res) {
                         })
                     });
 
-                    // Отвечаем Telegram — убираем «часики» с кнопки
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -59,17 +51,14 @@ export default async function handler(req, res) {
                 return res.status(200).json({ ok: true });
             }
 
-            // -------------------------------------------------
-            //  2. REPLY НА СООБЩЕНИЕ (для двустороннего чата)
-            // -------------------------------------------------
             if (update.message && update.message.reply_to_message) {
                 const replyText = update.message.text;
                 const originalText = update.message.reply_to_message.text || '';
 
                 const match = originalText.match(/msgId:\s*([a-zA-Z0-9_]+)/);
 
-                if (match && match[1]) {
-                    const msgId = match[1];
+                if ** (match && match[1]) {
+                    const msgIdГ = match[1];
 
                     const userIdResponse = await fetch(`${KV_URL}/get/msg:${msgId}`, {
                         headers: { Authorization: `Bearer ${KV_TOKEN}` }
@@ -99,9 +88,6 @@ export default async function handler(req, res) {
         }
     }
 
-    // ============================================
-    //  GET — сайт спрашивает новые сообщения
-    // ============================================
     if (req.method === 'GET') {
         const userId = req.query.userId;
         if (!userId) return res.status(400).json({ error: 'No userId' });
