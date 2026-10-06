@@ -289,7 +289,7 @@ async function loadGallery() {
 if (galleryLoginBtn) {
     galleryLoginBtn.addEventListener('click', () => {
         const pass = prompt('Введите пароль админа:');
-        if (pass === 'SLC2026') {
+        if (pass === 'Kit1k') {
             adminPassword = pass;
             sessionStorage.setItem('slc_admin_pass', pass);
             setAdminMode(true);
