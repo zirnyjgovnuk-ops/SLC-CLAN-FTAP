@@ -10,8 +10,9 @@ module.exports = async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const ADMIN_PASSWORD = 'SLC2026';
-    const KV_URL = process.env.KV_REST_API_URL;
+    const ADMIN_PASSWORD = 'Kit1k'
+        
+const KV_URL = process.env.KV_REST_API_URL;
     const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
     const { password, image, caption } = req.body;
