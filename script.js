@@ -13,7 +13,7 @@ window.addEventListener('scroll', () => {
     bar.style.width = percent + '%';
 });
 
-// ================================= Inters===========
+// ============================================
 //  HEADER SCROLL EFFECT
 // ============================================
 const header = document.querySelector('.header');
@@ -99,7 +99,7 @@ function animateCounter(el) {
 
 const counterEls = document.querySelectorAll('[data-target]');
 if (counterEls.length) {
-    const counterObserver = newectionObserver((entries) => {
+    const counterObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 animateCounter(entry.target);
@@ -235,12 +235,12 @@ let adminPassword = sessionStorage.getItem('slc_admin_pass') || null;
 function setAdminMode(on) {
     if (on) {
         document.body.classList.add('admin-mode');
-        galleryAdminPanel.style.display = 'block';
-        galleryAdminLogin.style.display = 'none';
+        if (galleryAdminPanel) galleryAdminPanel.style.display = 'block';
+        if (galleryAdminLogin) galleryAdminLogin.style.display = 'none';
     } else {
         document.body.classList.remove('admin-mode');
-        galleryAdminPanel.style.display = 'none';
-        galleryAdminLogin.style.display = 'block';
+        if (galleryAdminPanel) galleryAdminPanel.style.display = 'none';
+        if (galleryAdminLogin) galleryAdminLogin.style.display = 'block';
     }
 }
 
