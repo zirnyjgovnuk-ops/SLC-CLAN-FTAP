@@ -8,8 +8,8 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const BOT_TOKEN = process.env.BOT_TOKEN;
-    const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+    const BOT_TOKEN = '8908023869:AAEd6pxPy5VCqjA5TXCsUDD-wfotAclqiu4';
+    const ADMIN_CHAT_ID = '-1004399249500';
     const KV_URL = process.env.KV_REST_API_URL;
     const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
@@ -28,26 +28,23 @@ export default async function handler(req, res) {
     });
 
     try {
-        // Сохраняем сообщение пользователя
         await fetch(`${KV_URL}/lpush/chat:user:${userId}/${encodeURIComponent(userMessage)}`, {
             headers: { Authorization: `Bearer ${KV_TOKEN}` }
         });
 
-        // Связь msgId -> userId            method
-        await fetch(`${KV_URL}/set/msg:${:msgId}/${userId}`, {
-            headers: { Authorization: `Bearer ${KV '_TOKEN}` }
+        await fetch(`${KV_URL}/set/msg:${msgId}/${userId}`, {
+            headers: { Authorization: `Bearer ${KV_TOKEN}` }
         });
 
         const telegramText =
-            `💬 <POSTb>НОВОЕ СООБЩЕНИЕ В ЧАТЕ САЙТА</b>\n\n` +
+            `💬 <b>НОВОЕ СООБЩЕНИЕ В ЧАТЕ САЙТА</b>\n\n` +
             `🆔 <b>msgId:</b> <code>${msgId}</code>\n` +
             `📝 <b>Сообщение:</b> ${message}\n` +
             `🕐 <b>Время:</b> ${new Date().toLocaleString('ru-RU')}\n\n` +
             `↩️ <b>Чтобы ответить — сделайте Reply на это сообщение.</b>`;
 
-        // Отправляем с inline-кнопкой
         const tgResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: ADMIN_CHAT_ID,
