@@ -1,6 +1,6 @@
 // api/webhook.js — обрабатывает ответы и нажатия кнопок из Telegram
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,75 +16,74 @@ export default async function handler(req, res) {
             const update = req.body;
 
             if (update.callback_query) {
-                const cb = update.callback_query;
-                const data = cb.data || '';
-                const adminName = cb.from.username
-                    ? '@' + cb.from.username
-                    : (cb.from.first_name || 'Админ');
+                try {
+                    const cb = update.callback_query;
+                    const data = cb.data || '';
+                    const adminName = cb.from.username ? '@' + cb.from.username : (cb.from.first_name || 'Админ');
 
-                if (data.startsWith('seen_')) {
-                    const originalText = cb.message.text || '';
-                    const newText = originalText + `\n\n✅ <b>Просмотрено — ${adminName}</b>`;
+                    if (data.startsWith('seen_')) {
+                        const originalText = cb.message.text || '';
+                        const newText = originalText + `\n\n✅ <b>Просмотрено — ${adminName}</b>`;
 
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: cb.message.chat.id,
-                            message_id: cb.message.message_id,
-                            text: newText,
-                            parse_mode: 'HTML',
-                            reply_markup: { inline_keyboard: [] }
-                        })
-                    });
+                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: cb.message.chat.id,
+                                message_id: cb.message.message_id,
+                                text: newText,
+                                parse_mode: 'HTML',
+                                reply_markup: { inline_keyboard: [] }
+                            })
+                        });
 
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            callback_query_id: cb.id,
-                            text: '✅ Отмечено как просмотренное'
-                        })
-                    });
+                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                callback_query_id: cb.id,
+                                text: '✅ Отмечено как просмотренное'
+                            })
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error processing callback_query:', e);
                 }
-
                 return res.status(200).json({ ok: true });
             }
 
             if (update.message && update.message.reply_to_message) {
-                const replyText = update.message.text;
-                const originalText = update.message.reply_to_message.text || '';
+                try {
+                    const replyText = update.message.text;
+                    const originalText = update.message.reply_to_message.text || '';
+                    const match = originalText.match(/msgId:\s*([a-zA-Z0-9_]+)/);
 
-                const match = originalText.match(/msgId:\s*([a-zA-Z0-9_]+)/);
-
-                if ** (match && match[1]) {
-                    const msgIdГ = match[1];
-
-                    const userIdResponse = await fetch(`${KV_URL}/get/msg:${msgId}`, {
-                        headers: { Authorization: `Bearer ${KV_TOKEN}` }
-                    });
-                    const userIdData = await userIdResponse.json();
-                    const userId = userIdData.result;
-
-                    if (userId) {
-                        const adminMessage = JSON.stringify({
-                            from: 'admin',
-                            text: replyText,
-                            time: Date.now()
+                    if (match && match[1]) {
+                        const msgId = match[1];
+                        const userIdResponse = await fetch(`${KV_URL}/get/msg:${msgId}`, {
+                            headers: { Authorization: `Bearer ${KV_TOKEN}` }
                         });
+                        const userIdData = await userIdResponse.json();
+                        const userId = userIdData.result;
 
-                        await fetch(
-                            `${KV_URL}/lpush/chat:user:${userId}/${encodeURIComponent(adminMessage)}`,
-                            { headers: { Authorization: `Bearer ${KV_TOKEN}` } }
-                        );
+                        if (userId) {
+                            const adminMessage = JSON.stringify({ from: 'admin', text: replyText, time: Date.now() });
+                            await fetch(`${KV_URL}/lpush/chat:user:${userId}/${encodeURIComponent(adminMessage)}`, {
+                                headers: { Authorization: `Bearer ${KV_TOKEN}` }
+                            });
+                        }
                     }
+                } catch (e) {
+                    console.error('Error processing reply message:', e);
                 }
+                return res.status(200).json({ ok: true });
             }
 
             return res.status(200).json({ ok: true });
+
         } catch (error) {
-            console.error('Webhook POST error:', error);
-            return res.status(500).json({ error: error.message });
+            console.error('Fatal Webhook POST error:', error);
+            return res.status(200).json({ ok: true });
         }
     }
 
@@ -99,14 +98,10 @@ export default async function handler(req, res) {
                 headers: { Authorization: `Bearer ${KV_TOKEN}` }
             });
             const data = await response.json();
-
             const messages = (data.result || [])
-                .map(str => {
-                    try { return JSON.parse(str); } catch { return null; }
-                })
+                .map(str => { try { return JSON.parse(str); } catch { return null; } })
                 .filter(m => m && m.time > lastSeen)
                 .map(m => ({ from: m.from, text: m.text, time: m.time }));
-
             return res.status(200).json({ messages });
         } catch (error) {
             console.error('Webhook GET error:', error);
@@ -115,4 +110,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
-}
+};
