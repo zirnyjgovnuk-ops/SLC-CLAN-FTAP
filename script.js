@@ -1,9 +1,6 @@
 // ============================================
-//  TELEGRAM BOT CONFIG
+//  CONFIG
 // ============================================
-const BOT_TOKEN = '8908023869:AAEd6pxPy5VCqjA5TXCsUDD-wfotAclqiu4';
-const ADMIN_CHAT_ID = '-1004399249500';
-const API_URL = 'https://api.telegram.org';
 const VERCEL_URL = 'https://slc-clan-ftap.vercel.app';
 
 // ============================================
@@ -134,35 +131,29 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ============================================
-//  TELEGRAM BOT API (заявки)
+//  ОТПРАВКА ЗАЯВОК ЧЕРЕЗ VERCEL (с кнопкой)
 // ============================================
-async function sendToTelegramBot(message) {
-    const url = `${API_URL}/bot${BOT_TOKEN}/sendMessage`;
-
+async function sendFormToVercel(type, data) {
     try {
-        const response = await fetch(url, {
+        const response = await fetch(`${VERCEL_URL}/api/send-form`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: ADMIN_CHAT_ID,
-                text: message,
-                parse_mode: 'HTML'
-            })
+            body: JSON.stringify({ type, data })
         });
 
-        const data = await response.json();
+        const result = await response.json();
 
-        if (data.ok) {
+        if (result.ok) {
             showNotification('Заявка успешно отправлена!');
             return true;
         } else {
-            console.error('Telegram API Error:', data);
-            showNotification('Ошибка: ' + (data.description || 'неизвестная'), false);
+            console.error('Send form error:', result);
+            showNotification('Ошибка: ' + (result.error || 'неизвестная'), false);
             return false;
         }
     } catch (error) {
         console.error('Network Error:', error);
-        showNotification('Ошибка соединения с Telegram', false);
+        showNotification('Ошибка соединения. Проверьте интернет.', false);
         return false;
     }
 }
@@ -179,17 +170,7 @@ if (joinForm) {
         btn.textContent = 'Отправка...';
 
         const data = Object.fromEntries(new FormData(joinForm));
-
-        const message =
-            `🎮 <b>ЗАЯВКА НА ВСТУПЛЕНИЕ В КЛАН SLC</b>\n\n` +
-            `👤 <b>Никнейм:</b> ${data.nickname}\n` +
-            `🎂 <b>Возраст:</b> ${data.age}\n` +
-            `⚡ <b>Опыт в FTAP:</b> ${data.experience} мес.\n` +
-            `📊 <b>Ранг:</b> ${data.rank}\n` +
-            `💬 <b>Почему SLC:</b> ${data.why}\n` +
-            `🔗 <b>Telegram:</b> ${data.contact}`;
-
-        const ok = await sendToTelegramBot(message);
+        const ok = await sendFormToVercel('join', data);
         if (ok) joinForm.reset();
 
         btn.disabled = false;
@@ -209,25 +190,7 @@ if (complaintForm) {
         btn.textContent = 'Отправка...';
 
         const data = Object.fromEntries(new FormData(complaintForm));
-
-        const typeNames = {
-            'toxicity': 'Токсичность / Оскорбления',
-            'cheating': 'Читы / Нечестная игра',
-            'afk': 'AFK во время клановых войн',
-            'betrayal': 'Предательство клана',
-            'other': 'Другое'
-        };
-
-        const message =
-            `⚠️ <b>ЖАЛОБА НА УЧАСТНИКА SLC</b>\n\n` +
-            `👤 <b>Заявитель:</b> ${data.yourNick}\n` +
-            `🎯 <b>Нарушитель:</b> ${data.targetNick}\n` +
-            `📋 <b>Тип нарушения:</b> ${typeNames[data.type] || data.type}\n` +
-            `📅 <b>Дата инцидента:</b> ${data.date}\n` +
-            `📝 <b>Описание:</b> ${data.description}\n` +
-            `🔗 <b>Доказательства:</b> ${data.evidence || 'Нет'}`;
-
-        const ok = await sendToTelegramBot(message);
+        const ok = await sendFormToVercel('complaint', data);
         if (ok) complaintForm.reset();
 
         btn.disabled = false;
@@ -247,27 +210,7 @@ if (moderatorForm) {
         btn.textContent = 'Отправка...';
 
         const data = Object.fromEntries(new FormData(moderatorForm));
-
-        const rankNames = {
-            'ml_admin': 'мл.админ',
-            'admin': 'админ',
-            'moderator': 'модератор',
-            'st_moderator': 'ст. Модератор',
-            'coowner': 'соовнер'
-        };
-
-        const message =
-            `🛡️ <b>ЗАЯВКА НА МОДЕРАТОРА SLC</b>\n\n` +
-            `👤 <b>Никнейм:</b> ${data.nickname}\n` +
-            `🎂 <b>Возраст:</b> ${data.age}\n` +
-            `⏱️ <b>Время в клане:</b> ${data.timeInClan} мес.\n` +
-            `📊 <b>Текущая позиция:</b> ${rankNames[data.currentRank] || data.currentRank}\n` +
-            `💬 <b>Мотивация:</b> ${data.why}\n` +
-            `📋 <b>Опыт модерации:</b> ${data.experience || 'Нет опыта'}\n` +
-            `🕐 <b>График:</b> ${data.availability}\n` +
-            `🔗 <b>Telegram:</b> ${data.discord}`;
-
-        const ok = await sendToTelegramBot(message);
+        const ok = await sendFormToVercel('moderator', data);
         if (ok) moderatorForm.reset();
 
         btn.disabled = false;
@@ -282,7 +225,6 @@ const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const chatMessages = document.getElementById('chatMessages');
 
-// Уникальный ID пользователя (хранится в браузере)
 function getUserId() {
     let id = localStorage.getItem('slc_user_id');
     if (!id) {
@@ -293,8 +235,6 @@ function getUserId() {
 }
 
 const USER_ID = getUserId();
-
-// Время последнего полученного сообщения — чтобы не дублировать
 let lastSeen = 0;
 
 function addMessage(text, type) {
@@ -323,19 +263,13 @@ if (chatForm) {
             const response = await fetch(`${VERCEL_URL}/api/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: message,
-                    userId: USER_ID
-                })
+                body: JSON.stringify({ message, userId: USER_ID })
             });
 
             const data = await response.json();
 
             if (data.ok) {
-                addMessage(
-                    '✅ Сообщение отправлено администрации. Ответ появится здесь автоматически.',
-                    'system'
-                );
+                addMessage('✅ Сообщение отправлено администрации. Ответ появится здесь автоматически.', 'system');
             } else {
                 addMessage('⚠️ Не удалось отправить. Попробуйте позже.', 'system');
             }
@@ -348,9 +282,7 @@ if (chatForm) {
 
 async function checkForReplies() {
     try {
-        const response = await fetch(
-            `${VERCEL_URL}/api/webhook?userId=${USER_ID}&lastSeen=${lastSeen}`
-        );
+        const response = await fetch(`${VERCEL_URL}/api/webhook?userId=${USER_ID}&lastSeen=${lastSeen}`);
         const data = await response.json();
 
         if (data.messages && data.messages.length > 0) {
@@ -362,7 +294,7 @@ async function checkForReplies() {
             });
         }
     } catch (error) {
-        // Тихо игнорируем
+        // тихо
     }
 }
 
@@ -406,6 +338,5 @@ document.querySelectorAll('input, select, textarea').forEach(input => {
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ SLC Clan Website Loaded');
-    console.log('🤖 Bot: @slcsite_bot');
     console.log('🌐 Vercel:', VERCEL_URL);
 });
