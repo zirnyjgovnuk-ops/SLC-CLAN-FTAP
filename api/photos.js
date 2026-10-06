@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
 
     // POST — удалить фото
     if (req.method === 'POST') {
-        const ADMIN_PASSWORD = 'SLC2026';
+        const ADMIN_PASSWORD = 'Kit1k';
         const { password, url } = req.body;
 
         if (password !== ADMIN_PASSWORD) {
